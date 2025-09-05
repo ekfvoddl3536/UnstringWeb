@@ -20,7 +20,13 @@ public static class Program
             k.AddServerHeader = false;
 
             var port = serverConf.GetValue("ListenPort", 8080);
-            k.ListenAnyIP(port);
+            var open = serverConf.GetValue("PublicHost", false);
+
+            // public domain
+            if (open)
+                k.ListenAnyIP(port);
+            else
+                k.ListenLocalhost(port);
 
             k.Limits.KeepAliveTimeout = TimeSpan.FromSeconds(30);
             k.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(15);

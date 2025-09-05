@@ -32,9 +32,14 @@
     <IsPublishable>true</IsPublishable>
     <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
     <RuntimeIdentifier>linux-musl-x64</RuntimeIdentifier>
+    <PublishSingleFile>true</PublishSingleFile>
     -->
-    
-    <!-- Publish -->
+  </PropertyGroup>
+  
+  <!-- Windows x64 publish AOT -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)'=='win-x64'">
+    <PublishAot>true</PublishAot>
+    <PublishTrimmed>true</PublishTrimmed>
     <PublishSingleFile>true</PublishSingleFile>
   </PropertyGroup>
 
