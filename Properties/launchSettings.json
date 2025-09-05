@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Unstring.ServerApp": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "applicationUrl": "http://localhost:18870"
+    }
+  }
+}

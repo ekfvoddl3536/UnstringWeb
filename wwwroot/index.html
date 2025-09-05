@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Encoder / Decoder</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="wrap" aria-labelledby="app-title">
+    <h1 id="app-title" class="visually-hidden">Encoder / Decoder</h1>
+
+    <div class="section section--input">
+      <div class="section__topbar">
+        <button id="btn-clear" class="btn btn--xs btn--ghost" type="button" aria-label="모든 텍스트 지우기">Clear</button>
+      </div>
+
+      <label for="input" class="label">입력</label>
+      <textarea id="input" class="textbox textbox--lg" placeholder="여기에 입력" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off"></textarea>
+    </div>
+
+    <div class="actions">
+      <button id="btn-encode" class="btn btn--bold" type="button">Encode</button>
+      <button id="btn-decode" class="btn btn--bold" type="button">Decode</button>
+    </div>
+    <div class="actions actions--secondary">
+      <button id="btn-hash" class="btn btn--bold" type="button">Hashed Encode</button>
+    </div>
+
+    <div class="section section--output">
+      <label for="output" class="label">출력</label>
+      <textarea id="output" class="textbox textbox--lg" readonly placeholder="결과가 여기에 표시됩니다"></textarea>
+      <div class="section__bottombar">
+        <button id="btn-copy" class="btn btn--xs btn--ghost" type="button" aria-label="출력 복사">Copy to clipboard</button>
+      </div>
+    </div>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
