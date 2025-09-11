@@ -25,8 +25,8 @@ partial class Unstring
                     int temp = bnum & 0xF;
                     if (temp < 0x6)
                         sb.Append('.');
-                    else if (temp < 0xE)
-                        sb.Append(Unsafe.Add(ref vs, temp - 2));
+                    else if (temp < 0xC)
+                        sb.Append(Unsafe.Add(ref vs, temp - 4));
                     else if (temp < 0xE)
                         sb.Append('\"');
                     else

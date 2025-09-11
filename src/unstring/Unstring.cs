@@ -1,10 +1,13 @@
-﻿namespace Unstring.ServerApp;
+﻿using System.Text;
+
+namespace Unstring.ServerApp;
 
 internal static partial class Unstring
 {
     public const int TOKEN_SIZE_PER_WORD = 32;
     public const int MAX_TOKEN_WINDOW_SIZE = 512 * 1024;   // 512K
     public const int MAX_BUFFER_SIZE = TOKEN_SIZE_PER_WORD * MAX_TOKEN_WINDOW_SIZE;
+    public const int MAX_DECODE_SIZE = MAX_BUFFER_SIZE * 8;
 
     public const int E_TOO_LARGE = -1;
     public const int E_CANT_DECODE = -2;
@@ -67,9 +70,14 @@ internal static partial class Unstring
     #endregion
 
     #region Decode
-    internal static int Decode(scoped ref byte[]? buffer, scoped ReadOnlySpan<char> text)
+    internal static unsafe int Decode(scoped ref byte[]? buffer, scoped ReadOnlySpan<char> text)
     {
+        if (text.Length > MAX_DECODE_SIZE) return E_TOO_LARGE;
+
         scoped var sb = Utf8StringBuilder.Create(ref buffer, text.Length << 3);
+
+        Unsafe.SkipInit(out StackBuffer __buffer);
+        byte* buf = &__buffer.Element;
 
         for (int i = 0; ;)
         {
@@ -86,9 +94,10 @@ internal static partial class Unstring
             if (item < 0)
                 return E_CANT_DECODE;
 
-            sb.Append((char)item);
+            int encoded = Encoding.UTF8.GetBytes((char*)&item, 1, buf, sizeof(StackBuffer));
+            sb.Append(buf, encoded);
         }
-
+        
         return sb.Count;
     }
 
