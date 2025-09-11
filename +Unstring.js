@@ -44,7 +44,7 @@ function PEncode_Invoke(sb, text) {
   const buf = new Uint8Array(16);
   for (let i = 0; i < text.length; ++i) {
     let sidx = 0;
-    for (let c = text[i]; c != 0; c >>= 4) {
+    for (let c = text.charCodeAt(i); c != 0; c >>= 4) {
       let t = c & 0xF;
       
       // ' ' or '.'
@@ -77,7 +77,7 @@ function ReadCount(idx, text) {
   let count = 0;
   let i = idx;
   while (i < text.length) {
-    if (text[i++] == '.') { count++; }
+    if (text.charCodeAt(i++) == ASCII_2E_DOT) { count++; }
     else { break; }
   }
   
@@ -192,7 +192,7 @@ function PEncodeHashed_Invoke(sb, text) {
   
   let bnum = text.length + NextRNG();
   for (let i = 0; i < text.length; ++i) {
-    for (let c = text[i]; c != 0; c >>= 4) {
+    for (let c = text.charCodeAt(i); c != 0; c >>= 4) {
       let padding = NextRNG(c + bnum) & 0x1F;
       for (; padding > 0; --padding) {
         bnum = NextRNG(bnum);
