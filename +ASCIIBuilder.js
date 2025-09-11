@@ -33,10 +33,12 @@ class ASCIIBuilder {
   /**
    * 
    * @param {Uint8Array} src 
+   * @param {Number} count
    */
-  appendRange(src) {
-    this.buf.set(src, this.pos);
-    this.pos += src.length;
+  appendRange(src, count) {
+    const view = src.subarray(0, count);
+    this.buf.set(view, this.pos);
+    this.pos += view.length;
   }
   
   count() { return this.pos; }
