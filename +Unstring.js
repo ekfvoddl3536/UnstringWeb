@@ -10,16 +10,16 @@ const E_CANT_DECODE = -2;
 const E_EMPTY = 0;
 const E_SUCCESS = 1;
 
-const KMap = new TextEncoder().encode(" ._?<>(){}\"\'!, .");
+const KMap = " ._?<>(){}\"\'!, .";
 
-const ASCII_20_SPACE  = KMap[0];
-const ASCII_2E_DOT    = KMap[1];
-const ASCII_22_DQUOTE   = KMap[10];
+const ASCII_20_SPACE  = KMap.charCodeAt(0);
+const ASCII_2E_DOT    = KMap.charCodeAt(1);
+const ASCII_22_DQUOTE = KMap.charCodeAt(10);
 
 //#region Encode site
 /**
  * 
- * @param {ASCIIBuilder} sb 
+ * @param {StringBuilder} sb 
  * @param {Number} c integer
  */
 function WriteSize(sb, c) {
@@ -35,13 +35,13 @@ function WriteSize(sb, c) {
 
 /**
  * 
- * @param {ASCIIBuilder} sb 
+ * @param {StringBuilder} sb 
  * @param {String} text 
  */
 function PEncode_Invoke(sb, text) {
   if (text.length > MAX_BUFFER_SIZE) { return E_TOO_LARGE; }
   
-  const buf = new Uint8Array(16);
+  let buf = new Uint16Array(16);
   for (let i = 0; i < text.length; ++i) {
     let sidx = 0;
     for (let c = text.charCodeAt(i); c != 0; c >>= 4) {
@@ -50,16 +50,16 @@ function PEncode_Invoke(sb, text) {
       // ' ' or '.'
       if (((t - 2) & 0xF) >= 0xC) {
         // ' ' or '.'
-        buf[sidx++] = KMap[t];
+        buf[sidx++] = KMap.charCodeAt(t);
         // ' ' or '.'
-        buf[sidx++] = KMap[t >> 3];
+        buf[sidx++] = KMap.charCodeAt(t >> 3);
       } else {
-        buf[sidx++] = KMap[t];
+        buf[sidx++] = KMap.charCodeAt(t);
       }
     }
     
     WriteSize(sb, sidx);
-    sb.appendRange(buf, sidx);
+    sb.appendRange(buf, 0, sidx);
   }
   
   return E_SUCCESS;
@@ -84,6 +84,21 @@ function ReadCount(idx, text) {
   return { first: i, second: count };
 }
 
+
+/**
+ * 
+ * @param {String} s 
+ * @param {Number} v 
+ * @returns {Number}
+ */
+function _IndexOf(s, v) {
+  for (let i = 0; i < s.length; ++i) {
+    if (s.charCodeAt(i) == v) { return i; }
+  }
+  
+  return -1;
+}
+
 /**
  * 
  * @param {Number} idx 
@@ -102,7 +117,7 @@ function DecodeCore(idx, text, count) {
   
   let decode_idx = 0;
   for (; si < di && si < textLength; ++si) {
-    let r = KMap.indexOf(text.charCodeAt(si) & 0xFF);
+    let r = _IndexOf(KMap, text.charCodeAt(si));
     if (r < 0) { return E_TOO_LARGE; }
     
     // ' ' or '.'
@@ -130,7 +145,7 @@ function DecodeCore(idx, text, count) {
 
 /**
  * 
- * @param {ASCIIBuilder} sb 
+ * @param {StringBuilder} sb 
  * @param {String} text 
  */
 function PDecode_Invoke(sb, text) {
@@ -167,30 +182,36 @@ function PDecode_Invoke(sb, text) {
  * @returns {Number}
  */
 function NextRNG(num) {
-  let res = num * 1160377727;
+  let res = Math.imul(num | 0, 1160377727);
   for (let i = res; i > 1;) {
     if ((i & 1) != 0) {
-      res = (res >> 2) + (res >> 5) + (res >> 12) + res * 1524124499;
-      ++i;
+      const r = res | 0;
+      res = (
+        (r >> 2) +
+        (r >> 5) +
+        (r >> 12) +
+        Math.imul(r, 1524124499)
+      ) | 0;
+      i = (i + 1) | 0;
     }
     else {
-      res -= res >> 12;
+      res = (res - (res >> 12)) | 0;
       i >>= 1;
     }
   }
-
-  return res;
+  
+  return (res | 0);
 }
 
 /**
  * 
- * @param {ASCIIBuilder} sb 
+ * @param {StringBuilder} sb 
  * @param {String} text 
  */
 function PEncodeHashed_Invoke(sb, text) {
   if (text.length > MAX_BUFFER_SIZE) { return E_TOO_LARGE; }
   
-  let bnum = text.length + NextRNG();
+  let bnum = (text.length + NextRNG(text.length)) | 0;
   for (let i = 0; i < text.length; ++i) {
     for (let c = text.charCodeAt(i); c != 0; c >>= 4) {
       let padding = NextRNG(c + bnum) & 0x1F;
@@ -199,13 +220,12 @@ function PEncodeHashed_Invoke(sb, text) {
         
         let temp = bnum & 0xF;
         if (temp < 0x6) { sb.append(ASCII_2E_DOT); }
-        else if (temp < 0xE) { sb.append(KMap[temp - 2]); }
-        // I guess I was trying to use 0xF. Anyway, this is an obvious bug, but I'll leave it alone because it's annoying.
-        else if (temp < 0xE) { sb,append(ASCII_22_DQUOTE); } 
+        else if (temp < 0xC) { sb.append(KMap.charCodeAt(temp - 4)); }
+        else if (temp < 0xE) { sb.append(ASCII_22_DQUOTE); } 
         else { sb.append(ASCII_20_SPACE); }
       }
       
-      sb.append(KMap[c & 0xF]);
+      sb.append(KMap.charCodeAt(c & 0xF));
     }
     
     bnum = NextRNG(bnum);
@@ -218,7 +238,7 @@ function PEncodeHashed_Invoke(sb, text) {
 
 //#region server-side api
 async function WorkAsnc(input, T_invoke) {
-  const buffer = new ASCIIBuilder();
+  const buffer = new StringBuilder();
   const errno = await T_invoke(buffer, input);
   return { first: errno, second: buffer.toString() };
 }

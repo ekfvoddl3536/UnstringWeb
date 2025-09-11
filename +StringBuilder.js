@@ -1,7 +1,7 @@
 // c# like string builder
-class ASCIIBuilder {
-  constructor(initialCapacity=4096) {
-    this.buf = new Uint8Array(initialCapacity);
+class StringBuilder {
+  constructor(initialCapacity=1024) {
+    this.buf = new Uint16Array(initialCapacity);
     this.pos = 0;
   }
   
@@ -13,7 +13,7 @@ class ASCIIBuilder {
       let next = this.buf.length * 2;
       while (next < req) { next = next * 2; }
       
-      const narr = new Uint8Array(next);
+      const narr = new Uint16Array(next);
       narr.set(this.buf, 0);
       this.buf = narr;
     }
@@ -21,31 +21,32 @@ class ASCIIBuilder {
   
   /**
    * 
-   * @param {String} c 1-length ASCII character
-   * @returns {ASCIIBuilder} self
+   * @param {Number} c single UTF-16 character
+   * @returns {StringBuilder} self
    */
   append(c) {
     this.reserve(1);
-    this.buf[this.pos++] = c & 0xFF;
+    this.buf[this.pos++] = c & 0xFFFF;
     return this;
   }
   
   /**
    * 
-   * @param {Uint8Array} src 
+   * @param {Uint16Array} src 
+   * @param {Number} start
    * @param {Number} count
    */
-  appendRange(src, count) {
-    const view = src.subarray(0, count);
+  appendRange(src, start, count) {
+    const view = src.subarray(start, count);
+    this.reserve(view.length);
+    
     this.buf.set(view, this.pos);
     this.pos += view.length;
   }
-  
-  count() { return this.pos; }
   
   /**
    * 
    * @returns {String} 
    */
-  toString() { return new TextDecoder('utf-8').decode(this.buf.subarray(0, this.pos)); }
+  toString() { return String.fromCharCode.apply(null, this.buf.subarray(0, this.pos)); }
 }
